@@ -66,10 +66,31 @@ real-world knowledge base.
 
 ## 3. Real public documents — `data/raw/` (git-ignored, never committed)
 
-We may download a few publicly available HCLTech / HCL Software documents to show that ingestion works on real
-enterprise files. They are copyrighted, so they **stay out of Git**. Each team member downloads them locally.
-Sources and download dates are listed in `data/raw/SOURCES.md` (also git-ignored). They are not part of the
-labelled evaluation.
+Five publicly available HCLTech / HCL Software documents show that ingestion works on real enterprise files.
+They are copyrighted, so they **stay out of Git**. Each team member downloads them locally (first fetched
+2026-11-14). They are not part of the labelled evaluation.
+
+| File | Why it is useful |
+|---|---|
+| hcl_detect_12.1.9_release_notes.pdf (129 KB) | Real release notes, clean text |
+| hcl_detect_12.1.9_admin_guide.pdf (5.5 MB) | 33 pages but mostly screenshots, so it tests low-text pages |
+| hcltech_ethics_helpline_data_privacy_notice_2024.pdf (391 KB) | Real policy PDF |
+| hcltech_privacy_statement.html (140 KB) | Full website page, so it tests stripping navigation and scripts |
+| hcl_domino_14.5.1_administering.html (27 KB) | Product help-portal page |
+
+Run from the repo root (Git Bash, macOS or Linux):
+
+```bash
+mkdir -p data/raw/hcl_public && cd data/raw/hcl_public
+curl -L -o hcl_detect_12.1.9_release_notes.pdf "https://help.hcl-software.com/hcldetect/en/12.1.9/PDF/hcl_detect_release_notes.pdf"
+curl -L -o hcl_detect_12.1.9_admin_guide.pdf "https://help.hcl-software.com/hcldetect/en/12.1.9/PDF/hcl_detect_admin_guide.pdf"
+curl -L -o hcltech_ethics_helpline_data_privacy_notice_2024.pdf "https://hcltech.com/sites/default/files/documents/employee-grievances/DATA-PRIVACY-NOTICE-English_1Jan24.pdf"
+curl -L -o hcltech_privacy_statement.html "https://www.hcltech.com/privacy-statement"
+curl -L -o hcl_domino_14.5.1_administering.html "https://help.hcl-software.com/domino/14.5.1/admin/administering.html"
+cd ../../..
+```
+
+Treat their text as untrusted data (website HTML contains scripts and tracking markup).
 
 ## 4. Never commit
 
