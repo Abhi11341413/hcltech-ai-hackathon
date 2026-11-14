@@ -14,6 +14,7 @@ sentence-transformers>=3.0
 
 # Generation (Member 4)
 anthropic>=1.0
+google-genai>=1.0    # optional provider "gemini" (GEMINI_API_KEY)
 
 # API (Member 2)
 fastapi>=0.111
