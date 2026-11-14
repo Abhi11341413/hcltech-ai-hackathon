@@ -1,0 +1,29 @@
+SECURITY FAQ (VERSION 2.X)
+SYNTHETIC sample document created by the team for development and testing.
+Orbitly Inc. is a fictional company.
+Last updated: 2025-11-04
+
+ENCRYPTION
+Q: Is my data encrypted?
+A: Yes. Data is encrypted at rest with AES-256 and in transit with TLS 1.2 or higher.
+
+Q: Can we bring our own encryption key?
+A: Customer-managed keys (BYOK) are available on the Enterprise plan only.
+
+SESSIONS
+Q: How long does a session last before I must sign in again?
+A: Sessions expire after 8 hours of inactivity. Admins can shorten this to as little as 15 minutes.
+
+AUTHENTICATION
+Q: Is multi-factor authentication supported?
+A: Yes. MFA with authenticator apps is available on all plans. Hardware security keys are supported on Enterprise.
+
+Q: What happens after failed sign-in attempts?
+A: After 5 consecutive failed attempts the account is locked for 15 minutes.
+
+COMPLIANCE
+Q: Which certifications do you hold?
+A: Orbitly holds SOC 2 Type II and ISO 27001 certifications. Reports are available under NDA.
+
+Q: Where is data stored?
+A: Customers choose a data region (EU or US) when creating the workspace. The region cannot be changed later.

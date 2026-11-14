@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Integrations Configuration</title>
+</head>
+<body>
+  <h1>Integrations Configuration</h1>
+  <p>SYNTHETIC sample document created by the team for development and testing.
+     Orbitly Inc. is a fictional company. Applies to version 3.0.</p>
+
+  <h2>Slack</h2>
+  <p>Admins connect Slack from Admin &gt; Integrations &gt; Slack &gt; Connect. Choose which channels receive
+     project notifications. Members can mute notifications per project.</p>
+
+  <h2>Jira</h2>
+  <p>The Jira integration links Orbitly projects to Jira Cloud projects. Jira Server and Data Center are not supported.
+     Status changes sync in both directions every 5 minutes.</p>
+
+  <h2>Webhooks</h2>
+  <p>Create webhooks under Admin &gt; Integrations &gt; Webhooks. Each workspace can have up to 20 webhooks.
+     Payloads are signed with HMAC-SHA256 using the webhook secret; verify the X-Orbitly-Signature header.</p>
+  <p>If your endpoint does not return HTTP 2xx within 10 seconds, the delivery is retried up to 5 times
+     with exponential backoff (1, 2, 4, 8 and 16 minutes). After the final failure the webhook is disabled
+     and Admins receive an email.</p>
+
+  <h2>API keys</h2>
+  <p>Create API keys from Settings &gt; Developer &gt; API keys. Keys inherit the permissions of the user who created them.
+     Keys that are not used for 90 days are revoked automatically.</p>
+</body>
+</html>
