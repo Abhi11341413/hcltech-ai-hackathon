@@ -1,0 +1,42 @@
+# Secrets - NEVER commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Data - raw/uploaded/private documents are never committed
+data/raw/*
+data/uploads/*
+!data/raw/.gitkeep
+!data/uploads/.gitkeep
+
+# Model artefacts and indexes (rebuildable)
+models/*
+!models/.gitkeep
+*.npy
+*.faiss
+
+# Generated reports (commit only the final curated report deliberately with git add -f)
+reports/*
+!reports/.gitkeep
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

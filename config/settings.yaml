@@ -1,0 +1,39 @@
+# Non-secret configuration. Secrets go in .env (never committed).
+# Any key can be overridden with an env var: QA_<SECTION>__<KEY>=value
+log_level: INFO
+data_dir: data/sample_docs
+
+ingestion:
+  supported_extensions: [".pdf", ".html", ".htm", ".md", ".markdown", ".txt"]
+  chunk_max_tokens: 300
+  chunk_overlap_tokens: 50
+  min_chunk_chars: 40
+
+retrieval:
+  embedding_model: sentence-transformers/all-MiniLM-L6-v2
+  top_k: 5
+  candidate_pool: 30
+  rrf_k: 60
+  use_reranker: false
+  reranker_model: cross-encoder/ms-marco-MiniLM-L-6-v2
+  glossary_path: config/glossary.yaml
+  index_dir: models/index
+
+generation:
+  provider: anthropic      # anthropic | extractive (offline, no API key needed)
+  model: claude-opus-5-5
+  max_tokens: 4096
+  effort: low
+  max_context_passages: 6
+  timeout_seconds: 60
+
+reasoning:
+  min_top_score_for_answer: 0.35
+  high_confidence_threshold: 0.75
+  medium_confidence_threshold: 0.5
+  min_groundedness: 0.7
+
+evaluation:
+  k: 5
+  questions_path: data/eval/questions.jsonl
+  reports_dir: reports

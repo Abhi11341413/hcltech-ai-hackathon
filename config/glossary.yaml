@@ -1,0 +1,9 @@
+# Terminology variations used by query expansion (Member 3, FR-03).
+# canonical term: [synonyms / enterprise jargon / abbreviations]
+sign in: [log in, login, logon, authenticate, access my account]
+password reset: [forgot password, reset credentials, change password]
+api rate limit: [usage limit, quota, throttling, requests per minute, rpm]
+refund: [money back, reimbursement, chargeback, credit note]
+invoice: [bill, billing statement, receipt]
+sso: [single sign-on, saml, okta, azure ad]
+mfa: [2fa, two-factor, multi-factor authentication, otp]

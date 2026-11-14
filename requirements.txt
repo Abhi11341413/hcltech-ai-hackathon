@@ -1,0 +1,26 @@
+# Core / contracts
+pydantic>=2.7,<3
+pyyaml>=6.0
+python-dotenv>=1.0
+
+# Ingestion (Member 2)
+pypdf>=4.2
+beautifulsoup4>=4.12
+
+# Retrieval (Member 3)
+numpy>=1.26
+rank-bm25>=0.2.2
+sentence-transformers>=3.0
+
+# Generation (Member 4)
+anthropic>=1.0
+
+# API (Member 2)
+fastapi>=0.111
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+httpx2               # used by fastapi.testclient (and by anthropic 1.x)
+
+# Testing / quality
+pytest>=8.2
+ruff>=0.5
