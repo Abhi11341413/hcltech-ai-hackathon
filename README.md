@@ -57,6 +57,23 @@ uvicorn src.api.app:app --reload   # Swagger UI at http://127.0.0.1:8000/docs
 
 No API key? Set `QA_GENERATION__PROVIDER=extractive` to run fully offline.
 
+## Web interface
+
+```bash
+streamlit run src/ui/app.py      # opens http://localhost:8501
+```
+
+* **Ask**: example buttons (direct, paraphrase, conflict, ambiguous, unanswerable), a status badge, the answer with
+  `[n]` citations, a confidence bar with reasons, conflicting sources, citation excerpts and the retrieved passages.
+* **Knowledge base**: load the 13 sample documents or upload your own PDF/HTML/MD/TXT (max 20 MB; saved to the
+  git-ignored `data/uploads/`).
+* **Evaluation**: runs `data/eval/questions.jsonl` through the live pipeline and shows the metrics.
+
+The sidebar shows which team modules are merged. **Live mode** turns on automatically once ingestion, retrieval
+and reasoning are merged. Until Member 4's generator is merged, a clearly labelled stand-in answers with verbatim
+sentences from the top passages. **Demo mode** always works and uses mock data. Without `ANTHROPIC_API_KEY` in `.env`
+the app runs offline.
+
 ## Supported formats
 
 PDF (`pypdf`, page numbers kept), HTML (`beautifulsoup4`, h1–h6 sections), Markdown (`#` headings), TXT (heuristic headings).

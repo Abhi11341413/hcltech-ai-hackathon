@@ -79,6 +79,7 @@ tests/unit, tests/integration                               scripts/mock_e2e.py 
 | Member 2 | Ingestion, chunking, API service | `src/ingestion/*`, `src/api/*`, `data/sample_docs/*`, `tests/unit/test_ingestion.py`, `tests/unit/test_api.py` | `feature/member-2-ingestion-api` |
 | Member 3 | Hybrid retrieval | `src/retrieval/*`, `config/glossary.yaml`, `tests/unit/test_retrieval.py` | `feature/member-3-hybrid-retrieval` |
 | Member 4 | Grounded generation, citations, verification | `src/generation/*`, `tests/unit/test_generation.py` | `feature/member-4-grounded-generation` |
+| Member 1 — Team Lead | Web UI (Streamlit) | `src/ui/*`, `.streamlit/config.toml`, `tests/unit/test_ui_services.py`, `tests/integration/test_ui_app.py` | — |
 | Shared (PR + all 4 agree) | Contracts | `src/schemas.py`, `src/errors.py`, `src/config.py`, `config/settings.yaml`, `src/mocks.py`, `tests/conftest.py`, `requirements.txt`, `CLAUDE.md`, `README.md` | — |
 
 ## 5. Shared contracts
