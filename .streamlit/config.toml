@@ -1,0 +1,7 @@
+# Streamlit settings for the web UI (src/ui/app.py). Applied when run from the repo root.
+[server]
+maxUploadSize = 20        # MB; matches MAX_UPLOAD_BYTES in src/ui/services.py
+headless = true
+
+[browser]
+gatherUsageStats = false

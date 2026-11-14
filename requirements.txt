@@ -16,6 +16,9 @@ sentence-transformers>=3.0
 anthropic>=1.0
 
 # API (Member 2)
+# Web UI
+streamlit>=1.40
+
 fastapi>=0.111
 uvicorn[standard]>=0.30
 python-multipart>=0.0.9
