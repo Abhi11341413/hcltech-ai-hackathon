@@ -139,6 +139,23 @@ class QAPipeline:
         docs, failures = load_directory(directory)
         return self._index(docs, list(failures))
 
+    def remove_documents(self, doc_ids: list[str]) -> list[str]:
+        """Drop documents (e.g. stale versions) from the corpus and rebuild the index.
+
+        Unknown ids are ignored. Returns the ids that were actually removed. When the last
+        document is removed the retriever is left as is: ``ask`` already raises
+        IndexNotBuiltError for an empty corpus.
+        """
+        removed = [d for d in dict.fromkeys(doc_ids) if d in self._documents]
+        for doc_id in removed:
+            del self._documents[doc_id]
+            self._chunks.pop(doc_id, None)
+        if removed and self._chunks:
+            self.retriever.build(self.all_chunks())
+        logger.info("removed %d docs (corpus: %d docs, %d chunks)",
+                    len(removed), len(self._documents), self.num_chunks)
+        return removed
+
     # ------------------------------------------------------------------ question answering
     def ask(self, request: QueryRequest) -> QAResponse:
         """Never raises for 'no answer' situations - returns NOT_FOUND/NEEDS_CLARIFICATION.
