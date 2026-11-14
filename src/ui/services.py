@@ -24,7 +24,7 @@ from pathlib import Path
 
 from src import mocks
 from src.config import PROJECT_ROOT, Settings, get_logger
-from src.errors import UnsupportedFormatError, ValidationFailedError
+from src.errors import AssistantError, UnsupportedFormatError, ValidationFailedError
 from src.schemas import (
     AnswerStatus,
     Citation,
@@ -136,8 +136,29 @@ def missing_owner(exc: NotImplementedError) -> str:
 
 
 # --------------------------------------------------------------------------- settings
+_LLM_KEY_VARS = ("ANTHROPIC_API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY")
+
+
 def has_api_key() -> bool:
-    return bool(os.environ.get("ANTHROPIC_API_KEY", "").strip())
+    """True when any supported LLM key (Claude or Gemini) is set in the environment / .env."""
+    return any(os.environ.get(var, "").strip() for var in _LLM_KEY_VARS)
+
+
+def llm_model_name(settings: Settings) -> str | None:
+    """Model that will actually write answers for these settings, or None when offline.
+
+    Delegates to Member 4's ``get_llm_client`` so the UI shows exactly what the pipeline uses
+    (e.g. 'gemini-3.5-flash-lite' when only GEMINI_API_KEY is set). Makes no network call.
+    """
+    if settings.generation.provider == "extractive" or not has_api_key():
+        return None
+    try:
+        from src.generation.llm_client import ExtractiveClient, get_llm_client
+
+        client = get_llm_client(settings.generation)
+    except (ImportError, AssistantError):
+        return None
+    return None if isinstance(client, ExtractiveClient) else client.model_name
 
 
 def effective_settings(base: Settings, prefer_offline: bool = False) -> tuple[Settings, str]:
@@ -146,11 +167,14 @@ def effective_settings(base: Settings, prefer_offline: bool = False) -> tuple[Se
     if prefer_offline:
         settings.generation.provider = "extractive"
         return settings, "Offline mode: answers are built from passage text without calling an LLM."
-    if settings.generation.provider == "anthropic" and not has_api_key():
+    if settings.generation.provider != "extractive" and not has_api_key():
         settings.generation.provider = "extractive"
-        return settings, "No ANTHROPIC_API_KEY found in .env, so the offline extractive generator is used."
-    if settings.generation.provider == "anthropic":
-        return settings, f"Answers are written by {settings.generation.model} using only retrieved passages."
+        return settings, ("No ANTHROPIC_API_KEY or GEMINI_API_KEY found in .env, "
+                          "so the offline extractive generator is used.")
+    model = llm_model_name(settings)
+    if model:
+        return settings, f"Answers are written by {model} using only retrieved passages."
+    settings.generation.provider = "extractive"
     return settings, "Offline extractive generator (provider=extractive)."
 
 
@@ -221,7 +245,7 @@ def build_pipeline(settings: Settings, statuses: dict[str, ModuleStatus]) -> Pip
     notes: list[str] = []
     if statuses["generation"].ready:
         pipeline = QAPipeline(settings)
-        label = settings.generation.model if settings.generation.provider == "anthropic" else "extractive (offline)"
+        label = llm_model_name(settings) or "extractive (offline)"
     else:
         pipeline = QAPipeline(settings, generator=StandInGenerator())
         label = "UI stand-in (Member 4's generator not merged yet)"

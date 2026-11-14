@@ -44,8 +44,13 @@ def test_live_mode_needs_ingestion_retrieval_reasoning():
     assert not services.live_mode_available(_statuses(ingestion=False))
 
 
+def _clear_llm_keys(monkeypatch):
+    for var in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "GEMINI_API_KEY", "GOOGLE_API_KEY"):
+        monkeypatch.delenv(var, raising=False)
+
+
 def test_effective_settings_falls_back_without_key(monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    _clear_llm_keys(monkeypatch)
     settings, why = services.effective_settings(Settings())
     assert settings.generation.provider == "extractive" and "ANTHROPIC_API_KEY" in why
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-not-a-real-key")
@@ -55,8 +60,18 @@ def test_effective_settings_falls_back_without_key(monkeypatch):
     assert settings.generation.provider == "extractive"
 
 
+def test_gemini_key_alone_enables_live_llm(monkeypatch):
+    _clear_llm_keys(monkeypatch)
+    monkeypatch.setenv("GEMINI_API_KEY", "test-not-a-real-key")
+    assert services.has_api_key()
+    settings, why = services.effective_settings(Settings())
+    assert services.llm_model_name(settings).startswith("gemini") and "gemini" in why
+    offline, _ = services.effective_settings(Settings(), prefer_offline=True)
+    assert services.llm_model_name(offline) is None
+
+
 def test_effective_settings_does_not_mutate_base(monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    _clear_llm_keys(monkeypatch)
     base = Settings()
     services.effective_settings(base)
     assert base.generation.provider == "anthropic"
