@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Troubleshooting Guide</title>
+  <style>body { font-family: sans-serif; }</style>
+  <script>window.analytics = "must be stripped by the loader";</script>
+</head>
+<body>
+  <nav>Docs | Troubleshooting | Contact support</nav>
+  <h1>Troubleshooting Guide</h1>
+  <p>SYNTHETIC sample document created by the team for development and testing.
+     Orbitly Inc. is a fictional company. Last updated: 2026-09-12.</p>
+
+  <h2>Error codes</h2>
+  <h3>ERR-401 Session expired</h3>
+  <p>Your sign-in token has expired. Sign in again. If it happens repeatedly, check that your device clock is correct.</p>
+  <h3>ERR-403 SSO configuration error</h3>
+  <p>The identity provider rejected the SAML response. Ask an Admin to verify the Entity ID and the signing
+     certificate in Admin &gt; Security &gt; Single sign-on. Certificates must not be expired.</p>
+  <h3>ERR-429 Too many requests</h3>
+  <p>You exceeded the API rate limit for your plan. Wait for the time given in the Retry-After header,
+     then retry with exponential backoff.</p>
+  <h3>ERR-503 Service unavailable</h3>
+  <p>The service is under scheduled maintenance or experiencing an incident. Check the status page before contacting support.</p>
+
+  <h2>Desktop app does not sync</h2>
+  <p>First confirm you are on the latest desktop version from Help &gt; Check for updates.
+     Then sign out and sign in again. If files still do not sync, clear the local cache from
+     Settings &gt; Advanced &gt; Clear cache. Clearing the cache does not delete files stored in the cloud.</p>
+
+  <h2>Uploads fail</h2>
+  <p>Uploads fail when a file exceeds the maximum upload size of 100 MB, or when the workspace storage quota is full.
+     Owners can view storage usage under Billing &gt; Usage.</p>
+
+  <h2>Contacting support</h2>
+  <p>Open a ticket from Help &gt; Contact support and include the error code, the time it happened and your browser version.</p>
+
+  <footer>Example footer text - must be stripped by the loader</footer>
+</body>
+</html>
