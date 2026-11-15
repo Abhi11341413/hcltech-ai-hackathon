@@ -1,0 +1,21 @@
+# Keep secrets, local data and caches out of the image.
+.env
+.env.*
+!.env.example
+.git
+.github
+.venv
+venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.ruff_cache
+.vscode
+.idea
+.claude
+data/raw/*
+data/uploads/*
+models/*
+reports/*
+repo/
+tests/
