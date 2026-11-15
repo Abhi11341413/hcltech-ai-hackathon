@@ -1,8 +1,46 @@
-# Deploying the public demo (Hugging Face Spaces)
+# Deploying the public demo
 
 The demo is the Streamlit UI (`src/ui/app.py`), which runs the whole pipeline in one process.
-It is packaged as a Docker image and hosted on a free **Hugging Face Space** (CPU basic:
-2 vCPU, 16 GB RAM — enough for the embedding model, which smaller free tiers are not).
+
+| Host | Cost | How |
+|---|---|---|
+| **Streamlit Community Cloud** (used) | Free | Deploys straight from the GitHub repo, see below |
+| Hugging Face Spaces (Docker) | Needs a PRO subscription for Docker Spaces | `Dockerfile` + `scripts/deploy_hf_space.py`, see further below |
+| Any Docker host (Cloud Run, a VM, ...) | Varies | `Dockerfile` |
+
+## Streamlit Community Cloud (free)
+
+`requirements.txt` pulls the **CPU-only** PyTorch build (`--extra-index-url .../whl/cpu`), so the
+install is ~200 MB instead of ~2.5 GB of CUDA libraries that Streamlit Cloud cannot use.
+
+1. Sign in at https://share.streamlit.io with the GitHub account that can see this repository
+   and allow Streamlit to access it (needed because the repository is private).
+2. **Create app** → *Deploy a public app from GitHub* and fill in:
+
+   | Field | Value |
+   |---|---|
+   | Repository | `Abhi11341413/hcltech-ai-hackathon` |
+   | Branch | `main` (or a feature branch to try it before merging) |
+   | Main file path | `src/ui/app.py` |
+   | App URL | pick a name, e.g. `enterprise-doc-qa` |
+
+3. **Advanced settings** → Python version **3.11** (or 3.12), and paste the key into **Secrets**
+   (TOML; top-level secrets are exposed as environment variables, which the LLM client reads):
+
+   ```toml
+   GEMINI_API_KEY = "..."      # or ANTHROPIC_API_KEY = "..."
+   ```
+
+4. **Deploy**. The first build takes ~5 minutes (installing packages); the embedding model is
+   downloaded on the first "Load sample documents", which takes about a minute.
+
+Every push to the chosen branch redeploys automatically. Logs: the app's **Manage app** panel.
+Free apps sleep after a period without visitors; opening the URL wakes them.
+
+## Hugging Face Spaces (Docker)
+
+Hugging Face now requires a PRO subscription for Docker Spaces on free CPU hardware. If the team has
+one, this gives 16 GB RAM and the image below, with the embedding model baked in.
 
 | File | Purpose |
 |---|---|
@@ -10,7 +48,7 @@ It is packaged as a Docker image and hosted on a free **Hugging Face Space** (CP
 | `.dockerignore` | Keeps `.env`, `data/uploads`, `models`, caches and tests out of the image |
 | `scripts/deploy_hf_space.py` | Uploads the git-tracked files to the Space, adding the Space's README front matter on the fly |
 
-## 1. Test the container locally (needs Docker Desktop running)
+### 1. Test the container locally (needs Docker Desktop running)
 
 ```bash
 docker build -t docqa-demo .
@@ -21,7 +59,7 @@ docker run --rm -p 7860:7860 -e GEMINI_API_KEY=... docqa-demo  # or -e ANTHROPIC
 Open http://localhost:7860, load the sample documents in the **Knowledge base** tab and ask a question.
 Never put a key in the Dockerfile or commit it; pass it with `-e` only.
 
-## 2. One-time Hugging Face setup (each person deploying)
+### 2. One-time Hugging Face setup (each person deploying)
 
 1. Create a free account at https://huggingface.co/join.
 2. Create an access token with **Write** permission: https://huggingface.co/settings/tokens.
@@ -32,7 +70,7 @@ Never put a key in the Dockerfile or commit it; pass it with `-e` only.
    hf auth login
    ```
 
-## 3. Deploy
+### 3. Deploy
 
 Commit your changes first (only git-tracked files are uploaded), then:
 
@@ -47,7 +85,7 @@ image (about 5–10 minutes the first time); follow it in the Space's **Logs** t
 Use `--dry-run` to list what would be uploaded, `--private` for a private Space.
 Re-run the same command to deploy a newer commit.
 
-## 4. Add the LLM key as a secret
+### 4. Add the LLM key as a secret
 
 Space → **Settings** → **Variables and secrets** → **New secret**:
 

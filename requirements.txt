@@ -8,6 +8,11 @@ pypdf>=4.2
 beautifulsoup4>=4.12
 
 # Retrieval (Member 3)
+# CPU-only PyTorch wheels (~200 MB) instead of the default Linux CUDA build (~2.5 GB); needed for
+# Streamlit Community Cloud's install size/memory limits. No effect on Windows/macOS, whose PyPI
+# torch is already CPU-only, and no GPU is used anywhere in this project.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
 numpy>=1.26
 rank-bm25>=0.2.2
 sentence-transformers>=3.0
