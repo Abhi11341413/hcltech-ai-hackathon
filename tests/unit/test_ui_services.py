@@ -44,10 +44,17 @@ def test_live_mode_needs_ingestion_retrieval_reasoning():
     assert not services.live_mode_available(_statuses(ingestion=False))
 
 
+def _clear_keys(monkeypatch):
+    for envs in services.PROVIDER_KEYS.values():
+        for var in envs:
+            monkeypatch.delenv(var, raising=False)
+
+
 def test_effective_settings_falls_back_without_key(monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    _clear_keys(monkeypatch)
     settings, why = services.effective_settings(Settings())
-    assert settings.generation.provider == "extractive" and "ANTHROPIC_API_KEY" in why
+    assert settings.generation.provider == "extractive" and "SARVAM_API_KEY" in why
+    assert not services.has_api_key()
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-not-a-real-key")
     settings, _ = services.effective_settings(Settings())
     assert settings.generation.provider == "anthropic"
@@ -55,8 +62,21 @@ def test_effective_settings_falls_back_without_key(monkeypatch):
     assert settings.generation.provider == "extractive"
 
 
+def test_effective_settings_uses_sarvam_key(monkeypatch):
+    _clear_keys(monkeypatch)
+    monkeypatch.setenv("SARVAM_API_KEY", "test-not-a-real-key")
+    assert services.has_api_key() and services.configured_providers() == ["sarvam"]
+    base = Settings()
+    base.generation.provider = "sarvam"
+    settings, why = services.effective_settings(base)
+    assert settings.generation.provider == "sarvam" and "sarvam-105b (Sarvam AI)" in why
+    # default provider is anthropic; with only a Sarvam key the UI says it switched
+    settings, why = services.effective_settings(Settings())
+    assert settings.generation.provider == "sarvam" and "no key for 'anthropic'" in why
+
+
 def test_effective_settings_does_not_mutate_base(monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    _clear_keys(monkeypatch)
     base = Settings()
     services.effective_settings(base)
     assert base.generation.provider == "anthropic"

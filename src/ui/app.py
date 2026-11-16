@@ -89,7 +89,8 @@ def sidebar(statuses) -> tuple[str, bool]:
     if mode == "Live pipeline":
         offline = st.sidebar.toggle("Offline (no LLM calls)", value=not services.has_api_key(),
                                     disabled=not services.has_api_key(),
-                                    help="Without ANTHROPIC_API_KEY in .env the app always runs offline.")
+                                    help="Without an LLM key in .env (ANTHROPIC_API_KEY, GEMINI_API_KEY or "
+                                         "SARVAM_API_KEY) the app always runs offline.")
         _, explanation = services.effective_settings(get_settings(), prefer_offline=offline)
         st.sidebar.caption(explanation)
     return mode, offline
@@ -242,8 +243,7 @@ def evaluation_tab(ss, mode: str, bundle, statuses) -> None:
         st.info("Load the sample documents in the Knowledge base tab first.")
         return
     settings = get_settings()
-    uses_llm = bundle.generator_label == settings.generation.model and services.has_api_key()
-    if uses_llm:
+    if bundle.uses_llm:
         st.warning("Live LLM mode: this sends one request per question (about 27 calls).")
     if st.button("Run evaluation", type="primary"):
         from src.evaluation.run_eval import load_questions, run_evaluation

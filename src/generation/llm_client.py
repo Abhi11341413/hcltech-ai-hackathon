@@ -15,6 +15,8 @@ Two implementations behind one interface so the demo never dies:
       separately and re-raise as ``src.errors.LLMError``.
 * ``GeminiClient`` - calls Google Gemini via ``google-genai`` (provider="gemini",
   key from GEMINI_API_KEY). Same structured-output contract as AnthropicClient.
+* ``SarvamClient`` (``sarvam_client.py``) - calls Sarvam AI ``sarvam-105b`` over its REST
+  API (provider="sarvam", key from SARVAM_API_KEY). Same structured-output contract.
 * ``ExtractiveClient`` - no network: builds an answer from the highest-scoring
   sentences of the passages. Used when provider="extractive" or no API key.
 """
@@ -249,31 +251,42 @@ class ExtractiveClient:
                          conflict=False)  # type: ignore[return-value]
 
 
+PROVIDERS = ("anthropic", "gemini", "sarvam", "extractive")
+
+
+def _has_anthropic_key() -> bool:
+    return bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
+
+
+def _has_gemini_key() -> bool:
+    return bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))
+
+
 def get_llm_client(settings: GenerationSettings) -> LLMClient:
-    """Return AnthropicClient (provider 'anthropic') or GeminiClient (provider 'gemini') when
-    its key is configured, else ExtractiveClient (log a WARNING when falling back).
-    Provider 'anthropic' with no Anthropic key but a Gemini key uses Gemini, so a machine
-    with only GEMINI_API_KEY in ``.env`` needs no settings change.
+    """Return the client for ``settings.provider`` when its key is configured.
+
+    If the chosen provider has no key, fall back to the first other provider that has one
+    (Anthropic -> Gemini -> Sarvam), so a machine with only one key in ``.env`` needs no
+    settings change; with no key at all, use ExtractiveClient. Every fallback logs a WARNING.
 
     Raises:
         ConfigError: unknown provider name.
     """
+    from src.generation.sarvam_client import SarvamClient, has_sarvam_key
+
     provider = settings.provider.strip().lower()
+    if provider not in PROVIDERS:
+        raise ConfigError(f"unknown generation.provider '{settings.provider}' (use {', '.join(PROVIDERS)})")
     if provider == "extractive":
         return ExtractiveClient()
-    has_gemini_key = bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))
-    if provider == "anthropic":
-        if os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"):
-            return AnthropicClient(settings)
-        if has_gemini_key:
-            logger.warning("ANTHROPIC_API_KEY is not set but GEMINI_API_KEY is; using Gemini")
-            return GeminiClient(settings)
-        logger.warning("ANTHROPIC_API_KEY is not set; using the offline extractive fallback")
-        return ExtractiveClient()
-    if provider == "gemini":
-        if has_gemini_key:
-            return GeminiClient(settings)
-        logger.warning("GEMINI_API_KEY is not set; using the offline extractive fallback")
-        return ExtractiveClient()
-    raise ConfigError(f"unknown generation.provider '{settings.provider}' "
-                      f"(use 'anthropic', 'gemini' or 'extractive')")
+
+    available = {"anthropic": _has_anthropic_key(), "gemini": _has_gemini_key(), "sarvam": has_sarvam_key()}
+    build = {"anthropic": AnthropicClient, "gemini": GeminiClient, "sarvam": SarvamClient}
+    if available[provider]:
+        return build[provider](settings)
+    for other in ("anthropic", "gemini", "sarvam"):
+        if available[other]:
+            logger.warning("no API key for provider '%s'; using '%s' instead", provider, other)
+            return build[other](settings)
+    logger.warning("no LLM API key configured (provider '%s'); using the offline extractive fallback", provider)
+    return ExtractiveClient()

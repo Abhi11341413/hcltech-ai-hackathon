@@ -151,15 +151,21 @@ def test_llm_error_falls_back_to_extractive(settings, passages):
     assert fake.calls == 1 and ans.model == "extractive-fallback" and ans.citations
 
 
-def test_get_llm_client_without_key_uses_extractive(settings, monkeypatch):
-    for var in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "GEMINI_API_KEY", "GOOGLE_API_KEY"):
+ALL_KEY_VARS = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "GEMINI_API_KEY", "GOOGLE_API_KEY", "SARVAM_API_KEY")
+
+
+def _clear_keys(monkeypatch):
+    for var in ALL_KEY_VARS:
         monkeypatch.delenv(var, raising=False)
+
+
+def test_get_llm_client_without_key_uses_extractive(settings, monkeypatch):
+    _clear_keys(monkeypatch)
     assert isinstance(get_llm_client(settings.generation), ExtractiveClient)
 
 
 def test_get_llm_client_anthropic_without_key_but_gemini_key(settings, monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    monkeypatch.delenv("ANTHROPIC_AUTH_TOKEN", raising=False)
+    _clear_keys(monkeypatch)
     monkeypatch.setenv("GEMINI_API_KEY", "test-not-a-real-key")
     assert isinstance(get_llm_client(settings.generation), GeminiClient)
 
@@ -177,8 +183,7 @@ def test_get_llm_client_gemini_with_key(settings, monkeypatch):
 
 
 def test_get_llm_client_gemini_without_key_uses_extractive(settings, monkeypatch):
-    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    _clear_keys(monkeypatch)
     settings.generation.provider = "gemini"
     assert isinstance(get_llm_client(settings.generation), ExtractiveClient)
 
