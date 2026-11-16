@@ -48,7 +48,7 @@ class RetrievalSettings(BaseModel):
 
 
 class GenerationSettings(BaseModel):
-    provider: str = "anthropic"  # "anthropic" | "extractive" (offline fallback, no key needed)
+    provider: str = "anthropic"  # "anthropic" | "gemini" | "sarvam" | "extractive" (offline, no key needed)
     model: str = "claude-opus-5-5"
     max_tokens: int = 4096
     effort: str = "low"

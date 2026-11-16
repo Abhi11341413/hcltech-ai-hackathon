@@ -20,7 +20,7 @@ retrieval:
   index_dir: models/index
 
 generation:
-  provider: anthropic      # anthropic | extractive (offline, no API key needed)
+  provider: anthropic      # anthropic | gemini | sarvam | extractive (offline, no API key needed)
   model: claude-opus-5-5
   max_tokens: 4096
   effort: low

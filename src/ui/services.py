@@ -136,22 +136,60 @@ def missing_owner(exc: NotImplementedError) -> str:
 
 
 # --------------------------------------------------------------------------- settings
+# Same providers, key variables and fallback order as src.generation.llm_client.get_llm_client.
+PROVIDER_KEYS: dict[str, tuple[str, ...]] = {
+    "anthropic": ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"),
+    "gemini": ("GEMINI_API_KEY", "GOOGLE_API_KEY"),
+    "sarvam": ("SARVAM_API_KEY",),
+}
+PROVIDER_NAMES = {"anthropic": "Claude", "gemini": "Gemini", "sarvam": "Sarvam AI"}
+
+
+def configured_providers() -> list[str]:
+    """LLM providers whose API key is present in the environment / .env, in fallback order."""
+    return [p for p, envs in PROVIDER_KEYS.items() if any(os.environ.get(e, "").strip() for e in envs)]
+
+
 def has_api_key() -> bool:
-    return bool(os.environ.get("ANTHROPIC_API_KEY", "").strip())
+    return bool(configured_providers())
+
+
+def resolve_provider(requested: str) -> str | None:
+    """The provider that will actually answer: the requested one if it has a key, else the
+    first configured one, else None (offline)."""
+    available = configured_providers()
+    requested = requested.strip().lower()
+    if requested in available:
+        return requested
+    return available[0] if available else None
+
+
+def llm_label(generation) -> str:
+    """Human-readable model name, e.g. 'sarvam-105b (Sarvam AI)'."""
+    provider = generation.provider
+    try:
+        from src.generation.llm_client import get_llm_client
+        model = get_llm_client(generation).model_name
+    except Exception:  # noqa: BLE001 - generation module missing/unconfigured: fall back to settings
+        model = generation.model
+    return f"{model} ({PROVIDER_NAMES.get(provider, provider)})"
 
 
 def effective_settings(base: Settings, prefer_offline: bool = False) -> tuple[Settings, str]:
     """Copy of settings with the LLM provider resolved. Returns (settings, explanation)."""
     settings = base.model_copy(deep=True)
-    if prefer_offline:
+    requested = settings.generation.provider.strip().lower()
+    if prefer_offline or requested == "extractive":
         settings.generation.provider = "extractive"
         return settings, "Offline mode: answers are built from passage text without calling an LLM."
-    if settings.generation.provider == "anthropic" and not has_api_key():
+    resolved = resolve_provider(requested)
+    if resolved is None:
         settings.generation.provider = "extractive"
-        return settings, "No ANTHROPIC_API_KEY found in .env, so the offline extractive generator is used."
-    if settings.generation.provider == "anthropic":
-        return settings, f"Answers are written by {settings.generation.model} using only retrieved passages."
-    return settings, "Offline extractive generator (provider=extractive)."
+        keys = ", ".join(envs[0] for envs in PROVIDER_KEYS.values())
+        return settings, f"No LLM API key found in .env ({keys}), so the offline extractive generator is used."
+    settings.generation.provider = resolved
+    note = "" if resolved == requested else f" (no key for '{requested}', so using {PROVIDER_NAMES[resolved]})"
+    return settings, f"Answers are written by {llm_label(settings.generation)} using only retrieved passages{note}."
 
 
 # --------------------------------------------------------------------------- stand-in generator
@@ -204,6 +242,7 @@ class PipelineBundle:
     pipeline: object  # QAPipeline (typed loosely to keep imports lazy)
     generator_label: str
     notes: list[str] = field(default_factory=list)
+    uses_llm: bool = False  # True when answers come from a paid LLM API
 
 
 def build_pipeline(settings: Settings, statuses: dict[str, ModuleStatus]) -> PipelineBundle:
@@ -219,14 +258,16 @@ def build_pipeline(settings: Settings, statuses: dict[str, ModuleStatus]) -> Pip
     from src.pipeline import QAPipeline
 
     notes: list[str] = []
+    uses_llm = False
     if statuses["generation"].ready:
         pipeline = QAPipeline(settings)
-        label = settings.generation.model if settings.generation.provider == "anthropic" else "extractive (offline)"
+        uses_llm = settings.generation.provider != "extractive"
+        label = llm_label(settings.generation) if uses_llm else "extractive (offline)"
     else:
         pipeline = QAPipeline(settings, generator=StandInGenerator())
         label = "UI stand-in (Member 4's generator not merged yet)"
         notes.append("Answers are verbatim sentences from the top passages until Member 4's generator is merged.")
-    return PipelineBundle(pipeline=pipeline, generator_label=label, notes=notes)
+    return PipelineBundle(pipeline=pipeline, generator_label=label, notes=notes, uses_llm=uses_llm)
 
 
 # --------------------------------------------------------------------------- uploads
